@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z servicediscovery 8761 && nc -z configserver 8888 && nc -z mysqldb 3306; do echo waiting for dependencies; sleep 2; done;']
+      containers:
+        - name: order-service
+          image: micorservices-order-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - configMapRef:
+                name: spring-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  type: NodePort
+  selector:
+    app: order-service
+  ports:
+    - protocol: TCP
+      port: 8002
+      targetPort: 8002

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-server
+  template:
+    metadata:
+      labels:
+        app: config-server
+    spec:
+      initContainers:
+        - name: wait-for-eureka
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z servicediscovery 8761; do echo waiting for eureka; sleep 2; done;']
+      containers:
+        - name: config-server
+          image: config-server:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8888
+          livenessProbe:
+            tcpSocket:
+              port: 8888
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8888
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          envFrom:
+            - configMapRef:
+                name: spring-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: configserver
+spec:
+  type: ClusterIP
+  selector:
+    app: config-server
+  ports:
+    - protocol: TCP
+      port: 8888
+      targetPort: 8888
