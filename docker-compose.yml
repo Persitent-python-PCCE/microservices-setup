@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:9.6.0
+    container_name: mysqldb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: revshopdb
+    ports:
+      - "3307:3306"
+    networks:
+      - microservice-net
+
+  eureka-server:
+    build: ./service-discovery
+    container_name: servicediscovery
+    ports:
+      - "8761:8761"
+    networks:
+      - microservice-net
+
+  config-server:
+    build: ./config-server
+    container_name: configserver
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - eureka-server
+    networks:
+      - microservice-net
+    
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: apigateway
+    ports:
+      - "9000:9000"
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - microservice-net
+
+  product-service:
+    build: ./product-service
+    container_name: productservice
+    ports:
+      - "8001:8001"
+    depends_on:
+      - eureka-server
+      - mysql
+      - config-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - microservice-net
+
+  order-service:
+    build: ./order-service
+    container_name: orderservice
+    ports:
+      - "8002:8002"
+    depends_on:
+      - eureka-server
+      - mysql
+      - config-server
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - microservice-net
+
+
+
+networks:
+  microservice-net:

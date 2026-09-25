@@ -1,17 +1,17 @@
-package org.revature.orderservice;
+package org.revature.configserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.config.server.EnableConfigServer;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
-public class OrderServiceApplication {
+@EnableConfigServer
+public class ConfigServerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(OrderServiceApplication.class, args);
+        SpringApplication.run(ConfigServerApplication.class, args);
     }
 
 }
